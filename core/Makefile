@@ -736,6 +736,11 @@ INTERNAL_MKBOOTIMG_VERSION_ARGS := \
     --os_version $(PLATFORM_VERSION) \
     --os_patch_level $(PLATFORM_SECURITY_PATCH)
 
+ifeq ($(strip $(BOARD_KERNEL_SEPARATED_DT)),true)
+  INTERNAL_BOOTIMAGE_ARGS += --dt $(INSTALLED_DTIMAGE_TARGET)
+  BOOTIMAGE_EXTRA_DEPS    := $(INSTALLED_DTIMAGE_TARGET)
+endif
+
 # BOARD_USES_RECOVERY_AS_BOOT = true must have BOARD_BUILD_SYSTEM_ROOT_IMAGE = true.
 ifeq ($(BOARD_USES_RECOVERY_AS_BOOT),true)
 ifneq ($(BOARD_BUILD_SYSTEM_ROOT_IMAGE),true)
@@ -804,7 +809,7 @@ bootimage-nodeps: $(MKBOOTIMG) $(VBOOT_SIGNER) $(FUTILITY)
 
 else # PRODUCT_SUPPORTS_VBOOT != true
 
-$(INSTALLED_BOOTIMAGE_TARGET): $(MKBOOTIMG) $(INTERNAL_BOOTIMAGE_FILES)
+$(INSTALLED_BOOTIMAGE_TARGET): $(MKBOOTIMG) $(INTERNAL_BOOTIMAGE_FILES) $(BOOTIMAGE_EXTRA_DEPS)
 	$(call pretty,"Target boot image: $@")
 	$(hide) $(MKBOOTIMG) $(INTERNAL_BOOTIMAGE_ARGS) $(INTERNAL_MKBOOTIMG_VERSION_ARGS) $(BOARD_MKBOOTIMG_ARGS) --output $@
 	$(hide) $(call assert-max-image-size,$@,$(BOARD_BOOTIMAGE_PARTITION_SIZE))
@@ -1327,6 +1332,10 @@ endif
 ifdef BOARD_INCLUDE_RECOVERY_DTBO
   INTERNAL_RECOVERYIMAGE_ARGS += --recovery_dtbo $(BOARD_PREBUILT_DTBOIMAGE)
 endif
+ifeq ($(strip $(BOARD_KERNEL_SEPARATED_DT)),true)
+  INTERNAL_RECOVERYIMAGE_ARGS += --dt $(INSTALLED_DTIMAGE_TARGET)
+  RECOVERYIMAGE_EXTRA_DEPS    := $(INSTALLED_DTIMAGE_TARGET)
+endif
 
 # Keys authorized to sign OTA packages this build will accept.  The
 # build always uses dev-keys for this; release packaging tools will
@@ -1457,7 +1466,7 @@ $(recovery_uncompressed_ramdisk): $(MKBOOTFS) $(ADBD) \
 		$(INSTALLED_2NDBOOTLOADER_TARGET) \
 		$(recovery_build_props) $(recovery_resource_deps) \
 		$(recovery_fstab) \
-		$(RECOVERY_INSTALL_OTA_KEYS) \
+		$(RECOVERY_INSTALL_OTA_KEYS) $(RECOVERYIMAGE_EXTRA_DEPS) \
 		$(INSTALLED_VENDOR_DEFAULT_PROP_TARGET) \
 		$(BOARD_RECOVERY_KERNEL_MODULES) \
 		$(DEPMOD)
