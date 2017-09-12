@@ -24,7 +24,6 @@ PRODUCT_PACKAGES += \
     BasicDreams \
     BlockedNumberProvider \
     BookmarkProvider \
-    Browser2 \
     BuiltInPrintService \
     Calendar \
     CalendarProvider \
@@ -50,7 +49,6 @@ PRODUCT_PACKAGES += \
     PrintSpooler \
     PrintRecommendationService \
     ProxyHandler \
-    QuickSearchBox \
     SecureElement \
     Settings \
     SettingsIntelligence \
@@ -60,8 +58,11 @@ PRODUCT_PACKAGES += \
     Telecom \
     TeleService \
     Traceur \
+    Stk \
+    Terminal \
     VpnDialogs \
     vr \
+    WallpaperPicker \
     MmsService
 
 # Themes
