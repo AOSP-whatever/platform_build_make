@@ -24,7 +24,6 @@ PRODUCT_PACKAGES += \
     BasicDreams \
     BlockedNumberProvider \
     BookmarkProvider \
-    Browser2 \
     BuiltInPrintService \
     Calendar \
     CalendarProvider \
@@ -42,7 +41,7 @@ PRODUCT_PACKAGES += \
     KeyChain \
     Keyguard \
     LatinIME \
-    Launcher2 \
+    Launcher3 \
     ManagedProvisioning \
     MtpDocumentsProvider \
     PicoTts \
@@ -51,14 +50,16 @@ PRODUCT_PACKAGES += \
     PrintSpooler \
     PrintRecommendationService \
     ProxyHandler \
-    QuickSearchBox \
     Settings \
     SharedStorageBackup \
+    Stk \
     StorageManager \
     Telecom \
     TeleService \
+    Terminal \
     VpnDialogs \
     vr \
+    WallpaperPicker \
     MmsService
 
 # Themes
