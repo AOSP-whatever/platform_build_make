@@ -1242,4 +1242,7 @@ DEFAULT_DATA_OUT_MODULES := ltp $(ltp_packages) $(kselftest_modules)
 # Include any vendor specific config.mk file
 -include vendor/*/build/core/config.mk
 
+# Rules for QCOM targets
+-include $(BUILD_SYSTEM)/qcom_utils.mk
+
 include $(BUILD_SYSTEM)/dumpvar.mk
