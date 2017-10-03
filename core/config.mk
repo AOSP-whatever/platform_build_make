@@ -1239,4 +1239,7 @@ endif
 DEFAULT_DATA_OUT_MODULES := ltp $(ltp_packages) $(kselftest_modules)
 .KATI_READONLY := DEFAULT_DATA_OUT_MODULES
 
+# Rules for QCOM targets
+-include $(BUILD_SYSTEM)/qcom_utils.mk
+
 include $(BUILD_SYSTEM)/dumpvar.mk
