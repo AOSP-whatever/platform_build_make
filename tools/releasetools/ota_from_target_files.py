@@ -180,6 +180,10 @@ A/B OTA specific options
 
   --override_device <device>
       Override device-specific asserts. Can be a comma-separated list.
+
+  --backup <boolean>
+      Enable or disable the execution of backuptool.sh.
+      Disabled by default.
 """
 
 from __future__ import print_function
@@ -237,6 +241,7 @@ OPTIONS.skip_postinstall = False
 OPTIONS.retrofit_dynamic_partitions = False
 OPTIONS.skip_compatibility_check = False
 OPTIONS.output_metadata_path = None
+OPTIONS.backuptool = False
 
 OPTIONS.override_device = 'auto'
 
@@ -953,6 +958,11 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
 
   device_specific.FullOTA_InstallBegin()
 
+  if OPTIONS.backuptool:
+    script.Mount("/system")
+    script.RunBackup("backup")
+    script.Unmount("/system")
+
   system_progress = 0.75
 
   if OPTIONS.wipe_user_data:
@@ -1009,6 +1019,10 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
       "boot.img", "boot.img", OPTIONS.input_tmp, "BOOT")
   common.CheckSize(boot_img.data, "boot.img", target_info)
   common.ZipWriteStr(output_zip, "boot.img", boot_img.data)
+
+  if OPTIONS.backuptool:
+    script.ShowProgress(0.02, 10)
+    script.RunBackup("restore")
 
   script.ShowProgress(0.05, 5)
   script.WriteRawImage("/boot", "boot.img")
@@ -2228,6 +2242,8 @@ def main(argv):
       OPTIONS.extracted_input = a
     elif o == "--skip_postinstall":
       OPTIONS.skip_postinstall = True
+    elif o in ("--backup"):
+      OPTIONS.backuptool = bool(a.lower() == 'true')
     elif o == "--retrofit_dynamic_partitions":
       OPTIONS.retrofit_dynamic_partitions = True
     elif o == "--skip_compatibility_check":
@@ -2271,6 +2287,7 @@ def main(argv):
                                  "skip_compatibility_check",
                                  "output_metadata_path=",
                                  "override_device=",
+                                 "backup=",
                              ], extra_option_handler=option_handler)
 
   if len(args) != 2:
