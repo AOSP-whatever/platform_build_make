@@ -54,6 +54,7 @@ PRODUCT_PACKAGES += \
     SharedStorageBackup \
     Stk \
     StorageManager \
+    SubstratumService \
     Telecom \
     TeleService \
     Terminal \
@@ -72,6 +73,7 @@ PRODUCT_SYSTEM_SERVER_APPS += \
     FusedLocation \
     InputDevices \
     KeyChain \
+    SubstratumService \
     Telecom \
 
 # The set of packages we want to force 'speed' compilation on.
