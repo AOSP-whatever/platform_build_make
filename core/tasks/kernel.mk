@@ -238,6 +238,12 @@ ifneq ($(USE_CCACHE),)
 endif
 
 KERNEL_CROSS_COMPILE := CROSS_COMPILE="$(ccache) $(KERNEL_TOOLCHAIN_PATH)"
+
+# Needed for CONFIG_COMPAT_VDSO, safe to set for all arm64 builds
+ifeq ($(KERNEL_ARCH),arm64)
+   KERNEL_CROSS_COMPILE += CROSS_COMPILE_ARM32="arm-linux-androideabi-"
+endif
+
 ccache =
 
 define mv-modules
