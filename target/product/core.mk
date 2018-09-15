@@ -24,7 +24,6 @@ PRODUCT_PACKAGES += \
     BasicDreams \
     BlockedNumberProvider \
     BookmarkProvider \
-    Browser2 \
     BuiltInPrintService \
     Calendar \
     CalendarProvider \
@@ -43,7 +42,7 @@ PRODUCT_PACKAGES += \
     KeyChain \
     Keyguard \
     LatinIME \
-    Launcher2 \
+    Launcher3 \
     ManagedProvisioning \
     MtpDocumentsProvider \
     PicoTts \
@@ -52,21 +51,30 @@ PRODUCT_PACKAGES += \
     PrintSpooler \
     PrintRecommendationService \
     ProxyHandler \
-    QuickSearchBox \
     Settings \
     SharedStorageBackup \
+    Stk \
     StorageManager \
+    SubstratumService \
     Telecom \
     TeleService \
+    Terminal \
     VpnDialogs \
     vr \
+    WallpaperPicker \
     MmsService
+
+# Themes
+PRODUCT_PACKAGES += \
+    PixelTheme \
+    Stock
 
 # The set of packages whose code can be loaded by the system server.
 PRODUCT_SYSTEM_SERVER_APPS += \
     FusedLocation \
     InputDevices \
     KeyChain \
+    SubstratumService \
     Telecom \
 
 # The set of packages we want to force 'speed' compilation on.
