@@ -1424,6 +1424,10 @@ endif
 ifeq (true,$(BOARD_AVB_ENABLE))
 $(INSTALLED_BOOTIMAGE_TARGET) : $(AVBTOOL) $(BOARD_AVB_BOOT_KEY_PATH)
 endif
+ifdef BOARD_INCLUDE_RECOVERY_DTBO
+$(INSTALLED_BOOTIMAGE_TARGET): $(BOARD_PREBUILT_DTBOIMAGE)
+endif
+
 $(INSTALLED_BOOTIMAGE_TARGET): $(MKBOOTFS) $(MKBOOTIMG) $(MINIGZIP) $(ADBD) \
 		$(INSTALLED_RAMDISK_TARGET) \
 		$(INTERNAL_RECOVERYIMAGE_FILES) \
@@ -1435,10 +1439,14 @@ $(INSTALLED_BOOTIMAGE_TARGET): $(MKBOOTFS) $(MKBOOTIMG) $(MINIGZIP) $(ADBD) \
 		$(INSTALLED_VENDOR_DEFAULT_PROP_TARGET) \
 		$(BOARD_RECOVERY_KERNEL_MODULES) \
 		$(DEPMOD)
-		$(call pretty,"Target boot image from recovery: $@")
-		$(call build-recoveryramdisk)
-		$(hide) $(MKBOOTFS) -d $(TARGET_OUT) $(TARGET_RECOVERY_ROOT_OUT) | $(MINIGZIP) > $(recovery_ramdisk)
-		$(call build-recoveryimage-target, $@)
+	$(call pretty,"Target boot image from recovery: $@")
+        $(call build-recoveryramdisk)
+        $(hide) $(MKBOOTFS) -d $(TARGET_OUT) $(TARGET_RECOVERY_ROOT_OUT) | $(MINIGZIP) > $(recovery_ramdisk)
+	$(call build-recoveryimage-target, $@)
+endif # BOARD_USES_RECOVERY_AS_BOOT
+
+ifdef BOARD_INCLUDE_RECOVERY_DTBO
+$(INSTALLED_RECOVERYIMAGE_TARGET): $(BOARD_PREBUILT_DTBOIMAGE)
 endif
 
 $(recovery_uncompressed_ramdisk): $(MKBOOTFS) $(ADBD) \
@@ -1464,8 +1472,8 @@ $(recovery_ramdisk): $(MINIGZIP) \
 
 ifndef BOARD_CUSTOM_BOOTIMG_MK
 $(INSTALLED_RECOVERYIMAGE_TARGET): $(MKBOOTIMG) $(recovery_ramdisk) $(recovery_kernel)
-		@echo ----- Making recovery image ------
-		$(call build-recoveryimage-target, $@)
+		@echo ----- Making recovery image -----
+        $(call build-recoveryimage-target, $@)
 endif # BOARD_CUSTOM_BOOTIMG_MK
 
 ifdef RECOVERY_RESOURCE_ZIP
@@ -2569,6 +2577,7 @@ $(BUILT_TARGET_FILES_PACKAGE): \
 		$(INSTALLED_ANDROID_INFO_TXT_TARGET) \
 		$(INSTALLED_KERNEL_TARGET) \
 		$(INSTALLED_2NDBOOTLOADER_TARGET) \
+		$(BOARD_PREBUILT_DTBOIMAGE) \
 		$(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_SYSTEM_BASE_FS_PATH) \
 		$(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_VENDOR_BASE_FS_PATH) \
 		$(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_PRODUCT_BASE_FS_PATH) \
@@ -2599,7 +2608,7 @@ ifdef INSTALLED_2NDBOOTLOADER_TARGET
 	$(hide) cp $(INSTALLED_2NDBOOTLOADER_TARGET) $(zip_root)/$(PRIVATE_RECOVERY_OUT)/second
 endif
 ifdef BOARD_INCLUDE_RECOVERY_DTBO
-	$(hide) cp $(INSTALLED_DTBOIMAGE_TARGET) $(zip_root)/$(PRIVATE_RECOVERY_OUT)/recovery_dtbo
+	$(hide) cp $(BOARD_PREBUILT_DTBOIMAGE) $(zip_root)/$(PRIVATE_RECOVERY_OUT)/recovery_dtbo
 endif
 ifdef INTERNAL_KERNEL_CMDLINE
 	$(hide) echo "$(INTERNAL_KERNEL_CMDLINE)" > $(zip_root)/$(PRIVATE_RECOVERY_OUT)/cmdline
