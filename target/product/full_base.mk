@@ -50,6 +50,12 @@ PRODUCT_PROPERTY_OVERRIDES := \
 # Put en_US first in the list, so make it default.
 PRODUCT_LOCALES := en_US
 
+# Import backuptool scripts
+PRODUCT_COPY_FILES += \
+    build/make/tools/backuptool.sh:install/bin/backuptool.sh \
+    build/make/tools/backuptool.functions:install/bin/backuptool.functions \
+    build/make/tools/50-du.sh:system/addon.d/50-du.sh
+
 # Get some sounds
 $(call inherit-product-if-exists, frameworks/base/data/sounds/AllAudio.mk)
 $(call inherit-product-if-exists, frameworks/base/data/sounds/AudioPackage14.mk)
