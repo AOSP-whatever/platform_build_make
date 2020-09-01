@@ -4946,6 +4946,7 @@ ifneq ($(DU_BUILD),)
 else
     $(INTERNAL_OTA_PACKAGE_TARGET): backuptool := false
 endif
+$(INTERNAL_OTA_PACKAGE_TARGET): backuptool := true
 
 	@echo "Package OTA: $@"
 	$(call build-ota-package-target,$@,-k $(KEY_CERT_PAIR) --output_metadata_path $(INTERNAL_OTA_METADATA))
