@@ -66,7 +66,6 @@ PRODUCT_PACKAGES += \
     PrintSpooler \
     ProxyHandler \
     screenrecord \
-    SecureElement \
     SharedStorageBackup \
     SimAppDialog \
     Telecom \
@@ -77,6 +76,11 @@ PRODUCT_PACKAGES += \
     VpnDialogs \
     vr \
 
+
+ifneq ($(TARGET_HAS_LOW_RAM), true)
+PRODUCT_PACKAGES += \
+    SecureElement
+endif
 
 PRODUCT_SYSTEM_SERVER_APPS += \
     FusedLocation \
