@@ -5,17 +5,43 @@
 
 export S=/system
 export C=/postinstall/tmp/backupdir
+<<<<<<< HEAD:tools/backuptool_ab.sh
 export V=8.1
+=======
+export V=18.1
+
+export ADDOND_VERSION=3
+
+# Partitions to mount for backup/restore in V3
+export all_V3_partitions="vendor product system_ext odm oem"
+>>>>>>> c63fa8441b... backuptool: Support seamless backup and restore to extra partitions:prebuilt/common/bin/backuptool_ab.sh
 
 # Scripts in /system/addon.d expect to find backuptool.functions in /tmp
 mkdir -p /postinstall/tmp/
 cp -f /postinstall/system/bin/backuptool_ab.functions /postinstall/tmp/backuptool.functions
+
+get_script_version() {
+  version=$(grep "^# ADDOND_VERSION=" $1 | cut -d= -f2)
+  [ -z "$version" ] && version=1
+  echo $version
+}
 
 # Preserve /system/addon.d in /tmp/addon.d
 preserve_addon_d() {
   if [ -d /system/addon.d/ ]; then
     mkdir -p /postinstall/tmp/addon.d/
     cp -a /system/addon.d/* /postinstall/tmp/addon.d/
+<<<<<<< HEAD:tools/backuptool_ab.sh
+=======
+
+    # Discard any version 1 script, as it is not compatible with a/b
+    for f in /postinstall/tmp/addon.d/*sh; do
+      if [ $(get_script_version $f) = 1 ]; then
+        rm $f
+      fi
+    done
+
+>>>>>>> c63fa8441b... backuptool: Support seamless backup and restore to extra partitions:prebuilt/common/bin/backuptool_ab.sh
     chmod 755 /postinstall/tmp/addon.d/*.sh
   fi
 }
@@ -73,8 +99,8 @@ check_whitelist() {
   return $found
 }
 
-# Execute /system/addon.d/*.sh scripts with $1 parameter
-run_stage() {
+# Execute /system/addon.d/*.sh scripts with each $@ parameter
+run_stages() {
 if [ -d /postinstall/tmp/addon.d/ ]; then
   for script in $(find /postinstall/tmp/addon.d/ -name '*.sh' |sort -n); do
     # we have no /sbin/sh in android, only recovery
@@ -83,18 +109,111 @@ if [ -d /postinstall/tmp/addon.d/ ]; then
     # we can't count on /tmp existing on an A/B device, so utilize /postinstall/tmp
     # as a pseudo-/tmp dir
     sed -i 's|. /tmp/backuptool.functions|. /postinstall/tmp/backuptool.functions|g' $script
-    $script $1
+
+    v=$(get_script_version $script)
+    if [ $v -ge 3 ]; then
+      mount_extra $all_V3_partitions
+    else
+      umount_extra $all_V3_partitions
+    fi
+
+    for stage in $@; do
+      if [ $v -ge 3 ]; then
+        $script $stage
+      else
+        ADDOND_VERSION=2 $script $stage
+      fi
+    done
   done
 fi
+}
+
+#####################
+### Mount helpers ###
+#####################
+get_block_for_mount_point() {
+  grep -v "^#" /vendor/etc/fstab.$(getprop ro.boot.hardware) | grep " $1 " | tail -n1 | tr -s ' ' | cut -d' ' -f1
+}
+
+find_block() {
+  local name="$1"
+  local fstab_entry=$(get_block_for_mount_point "/$name")
+  # P-SAR hacks
+  [ -z "$fstab_entry" ] && [ "$name" = "system" ] && fstab_entry=$(get_block_for_mount_point "/")
+  [ -z "$fstab_entry" ] && [ "$name" = "system" ] && fstab_entry=$(get_block_for_mount_point "/system_root")
+
+  local dev
+  if [ "$DYNAMIC_PARTITIONS" = "true" ]; then
+    if [ -n "$fstab_entry" ]; then
+      dev="${BLK_PATH}/${fstab_entry}${SLOT_SUFFIX}"
+    else
+      dev="${BLK_PATH}/${name}${SLOT_SUFFIX}"
+    fi
+  else
+    if [ -n "$fstab_entry" ]; then
+      dev="${fstab_entry}${SLOT_SUFFIX}"
+    else
+      dev="${BLK_PATH}/${name}${SLOT_SUFFIX}"
+    fi
+  fi
+
+  if [ -b "$dev" ]; then
+    echo "$dev"
+  fi
+}
+
+DYNAMIC_PARTITIONS=$(getprop ro.boot.dynamic_partitions)
+if [ "$DYNAMIC_PARTITIONS" = "true" ]; then
+    BLK_PATH="/dev/block/mapper"
+else
+    BLK_PATH=/dev/block/bootdevice/by-name
+fi
+
+CURRENTSLOT=$(getprop ro.boot.slot_suffix)
+if [ ! -z "$CURRENTSLOT" ]; then
+  if [ "$CURRENTSLOT" = "_a" ]; then
+    # Opposite slot
+    SLOT_SUFFIX="_b"
+  else
+    SLOT_SUFFIX="_a"
+  fi
+fi
+
+mount_extra() {
+  for partition in $@; do
+    mnt_point="/postinstall/$partition"
+    mountpoint "$mnt_point" >/dev/null 2>&1 && break
+
+    blk_dev=$(find_block "$partition")
+    if [ -n "$blk_dev" ]; then
+      [ "$DYNAMIC_PARTITIONS" = "true" ] && blockdev --setrw "$blk_dev"
+      mount -o rw "$blk_dev" "$mnt_point"
+    fi
+  done
+}
+
+umount_extra() {
+  for partition in $@; do
+    # Careful with unmounting. If the update has a partition less than the current system,
+    # /postinstall/$partition is a symlink to /system/$partition, which on the active slot
+    # is a symlink to /$partition which is a mountpoint we would end up unmounting!
+    [ ! -L "/postinstall/$partition" ] && umount -l "/postinstall/$partition" 2>/dev/null
+  done
 }
 
 case "$1" in
   backup)
     mkdir -p $C
     if check_prereq; then
+<<<<<<< HEAD:tools/backuptool_ab.sh
         if check_whitelist postinstall/system; then
             exit 127
         fi
+=======
+      mkdir -p $C
+      preserve_addon_d
+      run_stages pre-backup backup post-backup
+>>>>>>> c63fa8441b... backuptool: Support seamless backup and restore to extra partitions:prebuilt/common/bin/backuptool_ab.sh
     fi
     check_blacklist postinstall/system
     preserve_addon_d
@@ -104,9 +223,19 @@ case "$1" in
   ;;
   restore)
     if check_prereq; then
+<<<<<<< HEAD:tools/backuptool_ab.sh
         if check_whitelist postinstall/tmp; then
             exit 127
         fi
+=======
+      run_stages pre-restore restore post-restore
+      umount_extra $all_V3_partitions
+      restore_addon_d
+      rm -rf $C
+      umount /postinstall/tmp
+      rm -rf /postinstall/tmp
+      sync
+>>>>>>> c63fa8441b... backuptool: Support seamless backup and restore to extra partitions:prebuilt/common/bin/backuptool_ab.sh
     fi
     check_blacklist postinstall/tmp
     run_stage pre-restore
