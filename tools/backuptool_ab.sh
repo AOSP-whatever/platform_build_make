@@ -13,8 +13,12 @@ export V=18.1
 export ADDOND_VERSION=3
 
 # Partitions to mount for backup/restore in V3
+<<<<<<< HEAD:tools/backuptool_ab.sh
 export all_V3_partitions="vendor product system_ext odm oem"
 >>>>>>> c63fa8441b... backuptool: Support seamless backup and restore to extra partitions:prebuilt/common/bin/backuptool_ab.sh
+=======
+export all_V3_partitions="vendor product system_ext"
+>>>>>>> f16993e63b... backuptool: Correct supported partitions for addon.d v3:prebuilt/common/bin/backuptool_ab.sh
 
 # Scripts in /system/addon.d expect to find backuptool.functions in /tmp
 mkdir -p /postinstall/tmp/
