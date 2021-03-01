@@ -5,23 +5,16 @@
 
 export S=/system
 export C=/postinstall/tmp/backupdir
-<<<<<<< HEAD:tools/backuptool_ab.sh
-export V=8.1
-=======
 export V=18.1
 
 export ADDOND_VERSION=3
 
 # Partitions to mount for backup/restore in V3
-<<<<<<< HEAD:tools/backuptool_ab.sh
-export all_V3_partitions="vendor product system_ext odm oem"
->>>>>>> c63fa8441b... backuptool: Support seamless backup and restore to extra partitions:prebuilt/common/bin/backuptool_ab.sh
-=======
 export all_V3_partitions="vendor product system_ext"
->>>>>>> f16993e63b... backuptool: Correct supported partitions for addon.d v3:prebuilt/common/bin/backuptool_ab.sh
 
 # Scripts in /system/addon.d expect to find backuptool.functions in /tmp
 mkdir -p /postinstall/tmp/
+mountpoint /postinstall/tmp >/dev/null 2>&1 || mount -t tmpfs tmpfs /postinstall/tmp
 cp -f /postinstall/system/bin/backuptool_ab.functions /postinstall/tmp/backuptool.functions
 
 get_script_version() {
@@ -35,8 +28,6 @@ preserve_addon_d() {
   if [ -d /system/addon.d/ ]; then
     mkdir -p /postinstall/tmp/addon.d/
     cp -a /system/addon.d/* /postinstall/tmp/addon.d/
-<<<<<<< HEAD:tools/backuptool_ab.sh
-=======
 
     # Discard any version 1 script, as it is not compatible with a/b
     for f in /postinstall/tmp/addon.d/*sh; do
@@ -45,7 +36,6 @@ preserve_addon_d() {
       fi
     done
 
->>>>>>> c63fa8441b... backuptool: Support seamless backup and restore to extra partitions:prebuilt/common/bin/backuptool_ab.sh
     chmod 755 /postinstall/tmp/addon.d/*.sh
   fi
 }
@@ -63,44 +53,14 @@ restore_addon_d() {
 check_prereq() {
 # If there is no build.prop file the partition is probably empty.
 if [ ! -r /system/build.prop ]; then
-    return 0
+  echo "Backup/restore is not possible. Partition is probably empty"
+  return 1
 fi
-
-if ( ! grep -q "^ro.build.version.release=$V.*" /system/build.prop ); then
-  echo "Not backing up files from incompatible version: $V"
-  return 0
+if ! grep -q "^ro.lineage.version=$V.*" /system/build.prop; then
+  echo "Backup/restore is not possible. Incompatible ROM version: $V"
+  return 2
 fi
-return 1
-}
-
-check_blacklist() {
-  if [ -f /system/addon.d/blacklist -a -d /$1/addon.d/ ]; then
-      ## Discard any known bad backup scripts
-      cd /$1/addon.d/
-      for f in *sh; do
-          [ -f $f ] || continue
-          s=$(md5sum $f | cut -c-32)
-          grep -q $s /system/addon.d/blacklist && rm -f $f
-      done
-  fi
-}
-
-check_whitelist() {
-  found=0
-  if [ -f /system/addon.d/whitelist ];then
-      ## forcefully keep any version-independent stuff
-      cd /$1/addon.d/
-      for f in *sh; do
-          s=$(md5sum $f | cut -c-32)
-          grep -q $s /system/addon.d/whitelist
-          if [ $? -eq 0 ]; then
-              found=1
-          else
-              rm -f $f
-          fi
-      done
-  fi
-  return $found
+return 0
 }
 
 # Execute /system/addon.d/*.sh scripts with each $@ parameter
@@ -110,8 +70,7 @@ if [ -d /postinstall/tmp/addon.d/ ]; then
     # we have no /sbin/sh in android, only recovery
     # use /system/bin/sh here instead
     sed -i '0,/#!\/sbin\/sh/{s|#!/sbin/sh|#!/system/bin/sh|}' $script
-    # we can't count on /tmp existing on an A/B device, so utilize /postinstall/tmp
-    # as a pseudo-/tmp dir
+    # we can't count on /tmp existing on an A/B device, so utilize /postinstall/tmp as tmpfs
     sed -i 's|. /tmp/backuptool.functions|. /postinstall/tmp/backuptool.functions|g' $script
 
     v=$(get_script_version $script)
@@ -207,31 +166,14 @@ umount_extra() {
 
 case "$1" in
   backup)
-    mkdir -p $C
     if check_prereq; then
-<<<<<<< HEAD:tools/backuptool_ab.sh
-        if check_whitelist postinstall/system; then
-            exit 127
-        fi
-=======
       mkdir -p $C
       preserve_addon_d
       run_stages pre-backup backup post-backup
->>>>>>> c63fa8441b... backuptool: Support seamless backup and restore to extra partitions:prebuilt/common/bin/backuptool_ab.sh
     fi
-    check_blacklist postinstall/system
-    preserve_addon_d
-    run_stage pre-backup
-    run_stage backup
-    run_stage post-backup
   ;;
   restore)
     if check_prereq; then
-<<<<<<< HEAD:tools/backuptool_ab.sh
-        if check_whitelist postinstall/tmp; then
-            exit 127
-        fi
-=======
       run_stages pre-restore restore post-restore
       umount_extra $all_V3_partitions
       restore_addon_d
@@ -239,16 +181,7 @@ case "$1" in
       umount /postinstall/tmp
       rm -rf /postinstall/tmp
       sync
->>>>>>> c63fa8441b... backuptool: Support seamless backup and restore to extra partitions:prebuilt/common/bin/backuptool_ab.sh
     fi
-    check_blacklist postinstall/tmp
-    run_stage pre-restore
-    run_stage restore
-    run_stage post-restore
-    restore_addon_d
-    rm -rf $C
-    rm -rf /postinstall/tmp
-    sync
   ;;
   *)
     echo "Usage: $0 {backup|restore}"
