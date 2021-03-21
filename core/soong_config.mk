@@ -127,6 +127,7 @@ $(call add_json_list, NativeCoverageExcludePaths,        $(COVERAGE_EXCLUDE_PATH
 $(call add_json_bool, SamplingPGO,                       $(filter true,$(SAMPLING_PGO)))
 
 $(call add_json_str_omitempty,  Target_init_vendor_lib,  $(TARGET_INIT_VENDOR_LIB))
+$(call add_json_bool, Disable_postrender_cleanup, $(filter true,$(TARGET_DISABLE_POSTRENDER_CLEANUP)))
 $(call add_json_str,  Target_shim_libs,                  $(subst $(space),:,$(TARGET_LD_SHIM_LIBS)))
 $(call add_json_bool, Supports_extended_compress_format, $(filter true,$(AUDIO_FEATURE_ENABLED_EXTENDED_COMPRESS_FORMAT)))
 
